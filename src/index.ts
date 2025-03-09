@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -117,7 +117,7 @@ class YouTubeTranscriptExtractor {
   }
 }
 
-class TranscriptServer {
+export class TranscriptServer {
   private extractor: YouTubeTranscriptExtractor;
   private server: Server;
 
@@ -144,10 +144,12 @@ class TranscriptServer {
       console.error("[MCP Error]", error);
     };
 
+    /*
     process.on('SIGINT', async () => {
       await this.stop();
       process.exit(0);
     });
+    */
   }
 
   private setupHandlers(): void {
@@ -231,9 +233,8 @@ class TranscriptServer {
   /**
    * Starts the server
    */
-  async start(): Promise<void> {
-    const transport = new StdioServerTransport();
-    await this.server.connect(transport);
+  async start(serverTransport: InMemoryTransport): Promise<void> {
+  	await this.server.connect(serverTransport);
   }
 
   /**
@@ -248,6 +249,7 @@ class TranscriptServer {
   }
 }
 
+/*
 // Main execution
 async function main() {
   const server = new TranscriptServer();
@@ -264,3 +266,4 @@ main().catch((error) => {
   console.error("Fatal server error:", error);
   process.exit(1);
 });
+*/
