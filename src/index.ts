@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -12,6 +11,10 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 // @ts-ignore
 import { getSubtitles } from 'youtube-captions-scraper';
+
+import * as process from 'node:process';
+import { WorkerEntrypoint } from "cloudflare:workers";
+import { proxyMessage, validateHeaders } from '@contextdepot/mcp-proxy/dist/index.js'
 
 // Define tool configurations
 const TOOLS: Tool[] = [
@@ -248,19 +251,21 @@ class TranscriptServer {
   }
 }
 
-// Main execution
-async function main() {
-  const server = new TranscriptServer();
-  
-  try {
-    await server.start();
-  } catch (error) {
-    console.error("Server failed to start:", error);
-    process.exit(1);
-  }
-}
+const server = new TranscriptServer();
 
-main().catch((error) => {
-  console.error("Fatal server error:", error);
-  process.exit(1);
-});
+export default class extends WorkerEntrypoint {
+    // main worker entrypoint
+    async fetch(request, env, ctx): Promise<Response> {
+        return new Response("Not found", { status: 404 });
+    }
+
+    // validate server intput
+    validate(headers) {
+        return [];
+    }
+
+    // send message to the server
+    async message(requestMessage): Promise<void> {
+        return proxyMessage(server, requestMessage)
+    }
+};
